@@ -399,7 +399,7 @@ function renderChrome() {
   $('footer').innerHTML = `<div><div class="lockup">${LOGO}<span>${esc(name)}</span></div>
       A static FAIR Data Point, rendered in your browser with <a href="https://github.com/rdfjs/N3.js" target="_blank" rel="noopener">N3.js</a>.</div>
     <div>${footerCredits()}
-      Browse another FDP with <span class="mono">?index=&lt;url&gt;</span></div>`;
+      Browse another FDP with <span class="mono">?index=&lt;url&gt;</span>${templateCredit()}</div>`;
   // "Catalogs" in the top bar scrolls on the index, navigates elsewhere.
   $('topnav').querySelector('a[href="#catalogs"]').onclick = e => {
     e.preventDefault();
@@ -407,6 +407,14 @@ function renderChrome() {
     else scrollToId('catalogs');
   };
 }
+// Every ecosystem points back to the template and the place to start another one.
+function templateCredit() {
+  const t = CFG.template || {};
+  if (!t.repository) return '';
+  const start = t.landing || `https://github.com/${t.repository}`;
+  return `<br>Built with the ${link(`https://github.com/${t.repository}`, 'FDP ecosystem template')} · ${link(start, 'Start your own')}`;
+}
+
 function footerCredits() {
   if (!contributors || !contributors.people.length)
     return indexModel.publisher ? 'Curated by ' + esc(indexModel.publisher) + '<br>' : '';

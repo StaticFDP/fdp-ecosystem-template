@@ -14,4 +14,5 @@ Each catalog describes one resource and every way to obtain it: portals, APIs, S
 
 - **Deploys:** GitHub Pages deploys on every push to `{{branch}}`. The FAIR assessment runs weekly and after deploys; the results are on the site under *FAIR tests*.
 - **IRIs:** all IRIs start with `{{baseIri}}`. For persistent identifiers, register a w3id and run `scripts/set-base.sh https://w3id.org/<your-id>/`.
+- **More ecosystems:** see the others, or start another one, at <{{templateLanding}}>.
 - **Engine:** the engine (scripts, viewer and workflows, listed in [`.fdp-engine`](.fdp-engine)) comes from the [FDP ecosystem template](https://github.com/{{template}}). Get improvements with *Actions → Update engine*, or run `scripts/update-engine.sh`.

@@ -4,6 +4,7 @@ Start your own static [FAIR Data Point](https://specs.fairdatapoint.org/) ecosys
 
 Each catalog describes one resource and **every way to obtain it**: portal, APIs, SPARQL endpoints, bulk dumps, cloud buckets, copies in aggregators. Each way is typed with an access method and comes with a "How to get it" recipe.
 
+**Start here:** <https://fdp.semscape.org/ecosystems/> (the landing page, with all ecosystems and a one-click start).
 **Demo:** <https://fdp.semscape.org/fdp-ecosystem-template/> (this repository, with one example source).
 **In use:** [Biodiversity FDP](https://koetai.github.io/biodiversity-fdp/) ([source](https://github.com/Koetai/biodiversity-fdp)).
 

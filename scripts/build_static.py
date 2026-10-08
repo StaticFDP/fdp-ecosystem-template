@@ -63,7 +63,7 @@ def instance_head(e, public):
     if logo_path.exists():
         logo_svg = re.sub(r"<!--.*?-->|<\?xml[^>]*\?>", "", logo_path.read_text(), flags=re.S).strip()
         logo_svg = re.sub(r'(<svg\b[^>]*?)\s+color="[^"]*"', r"\1", logo_svg, count=1)   # inline copy follows the theme colour
-    runtime = {k: CONFIG.get(k) for k in ("name", "headline", "indexFolder", "repository", "branch", "siteUrl")}
+    runtime = {k: CONFIG.get(k) for k in ("name", "headline", "indexFolder", "repository", "branch", "siteUrl", "template")}
     runtime_json = json.dumps(runtime, ensure_ascii=False).replace("</", "<\\/")
     return (f"<title>{e(CONFIG['name'])}</title>\n"
             f'<meta name="description" content="{e(CONFIG.get("description", ""))}">\n'

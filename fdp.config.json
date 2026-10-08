@@ -54,6 +54,7 @@
   },
   "template": {
     "repository": "StaticFDP/fdp-ecosystem-template",
-    "branch": "main"
+    "branch": "main",
+    "landing": "https://fdp.semscape.org/ecosystems/"
   }
 }

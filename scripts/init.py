@@ -53,7 +53,8 @@ def render(template, cfg):
     m = cfg.get("maintainer") or {}
     who = m.get("name") or (m.get("github") and f"@{m['github']}")
     line = (f" Maintainer: {who}" + (f" ([ORCID {m['orcid']}](https://orcid.org/{m['orcid']}))" if m.get("orcid") else "") + ".") if who else ""
-    values = {**cfg, "template": cfg.get("template", {}).get("repository", "StaticFDP/fdp-ecosystem-template"), "maintainerLine": line}
+    values = {**cfg, "template": cfg.get("template", {}).get("repository", "StaticFDP/fdp-ecosystem-template"),
+              "templateLanding": cfg.get("template", {}).get("landing", "https://fdp.semscape.org/ecosystems/"), "maintainerLine": line}
     return re.sub(r"\{\{(\w+)\}\}", lambda x: str(values.get(x.group(1), "")), template)
 
 
