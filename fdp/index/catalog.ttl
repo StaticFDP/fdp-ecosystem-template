@@ -21,7 +21,8 @@
     dcat:landingPage <https://fdp.semscape.org/fdp-ecosystem-template/> ;
     pim:persistencePolicy <https://github.com/StaticFDP/fdp-ecosystem-template/blob/main/PERSISTENCE.md> ;
     dcterms:modified "2026-10-08"^^xsd:date ;
-    rdfs:seeAlso <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/vocab/access-methods.ttl> ;
+    rdfs:seeAlso <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/vocab/access-methods.ttl> ,
+        <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/index/contributors.ttl> ;
     # The catalog documents themselves, for clients that follow LDP containment.
     ldp:contains
         <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/wikidata-fdp/catalog.ttl> ;
