@@ -1,0 +1,19 @@
+# OSTrails FAIR Champion core tests run by scripts/fair_assess.py, one test id per line.
+# Descriptions: https://tests.ostrails.eu/tests/<id>   API: https://tests.ostrails.eu/tests/<id>/api
+test_FM_F1_M_IdentUnique
+test_FM_F1_M_IdentPersistent
+test_FM_F3_M_MetaIdent
+test_FM_F3_M_DataIdent
+test_FM_F4_M_MetaIndexed
+test_FM_A1_1_M_OpenProt
+test_FM_A1_1_M_OpenProt_Data
+test_FM_A1_2_M_Auth
+test_FM_A1_2_M_DataAuth
+test_FM_A2_M_MetaLong
+test_FM_I1_M_FormalLangSyntax
+test_FM_I1_M_FormLangSemantic_Data
+test_FM_I2_M_ResolvabilityOfTerms
+test_FM_I2_M_ResolvabilityOfValues
+test_FM_I3_M_QualRef
+test_FM_R1_1_M_StdLic
+test_FM_R1_1_M_StdLic_strong

@@ -1,0 +1,90 @@
+name: Deploy viewer to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  issues:
+    types: [opened]     # credit new data-source requests without waiting for a merge
+  workflow_dispatch:
+
+permissions:
+  contents: write   # commit the regenerated contributors.ttl back to main
+  actions: read     # download the latest FAIR assessment report
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name != 'issues' || contains(github.event.issue.labels.*.name, 'data-source')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history, for contributors.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Initialise a fresh copy of the template
+        # Only acts in a repository just created with "Use this template": points the config and
+        # IRIs at this repository and commits that (a push with the built-in token does not re-trigger).
+        run: |
+          python scripts/init.py --if-needed
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Initialise this FDP from the template"
+            git push origin HEAD
+          fi
+      - run: pip install rdflib && python scripts/validate.py
+      - name: Collect contributors (GitHub history, pull requests, data-source issues, Wikidata)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/contributors.py "$RUNNER_TEMP/contributors.json" --turtle "fdp/$(python scripts/fdpconfig.py get indexFolder)/contributors.ttl"
+      - name: Commit contributors.ttl if it changed
+        # Keeps the raw.githubusercontent.com copy of the FDP in step with the site.
+        # A push made with GITHUB_TOKEN does not trigger another workflow run.
+        run: |
+          ttl="fdp/$(python scripts/fdpconfig.py get indexFolder)/contributors.ttl"
+          if ! git diff --quiet -- "$ttl" || [ -n "$(git status --porcelain "$ttl")" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add "$ttl"
+            git commit -m "Update contributors.ttl"
+            git pull --rebase origin main && git push origin HEAD:main || echo "::warning::Could not push contributors.ttl; the site still has the fresh copy."
+          fi
+      - run: scripts/build-site.sh
+      - run: cp "$RUNNER_TEMP/contributors.json" _site/contributors.json
+      - name: Add the latest FAIR assessment of this site
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          id=$(gh run list --workflow fair.yml --status success --limit 10 --json databaseId --jq '.[].databaseId' | head -n 10)
+          for run in $id; do
+            rm -rf "$RUNNER_TEMP/fair"
+            gh run download "$run" -n fair-report -D "$RUNNER_TEMP/fair" 2>/dev/null || continue
+            # Manual runs may assess another FDP; publish only reports about this site.
+            if python -c "import json,sys; sys.exit(json.load(open('$RUNNER_TEMP/fair/report.json'))['start'] != '$(python scripts/fdpconfig.py get siteUrl)')"; then
+              cp "$RUNNER_TEMP/fair/report.json" _site/fair-report.json
+              echo "Published FAIR report from run $run"
+              break
+            fi
+          done
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

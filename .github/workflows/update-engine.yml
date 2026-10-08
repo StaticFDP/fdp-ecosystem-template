@@ -1,0 +1,82 @@
+name: Update engine
+
+# Brings the engine (paths in .fdp-engine) up to date with the FDP ecosystem template
+# and opens a pull request. Your content is never touched.
+#
+# GitHub's built-in token may not modify workflow files. To include them, add a
+# repository secret ENGINE_UPDATE_TOKEN (a fine-grained token with Contents, Pull
+# requests and Workflows: read & write); without it, workflow changes are listed in
+# the pull request for you to apply with scripts/update-engine.sh.
+
+on:
+  schedule:
+    - cron: "41 5 1 * *"          # monthly
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.ENGINE_UPDATE_TOKEN || github.token }}
+      HAS_TOKEN: ${{ secrets.ENGINE_UPDATE_TOKEN != '' }}
+      BRANCH: engine-update
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ENGINE_UPDATE_TOKEN || github.token }}
+
+      - name: Skip the template itself
+        id: self
+        run: |
+          if [ "$(python3 scripts/fdpconfig.py get template.repository)" = "$GITHUB_REPOSITORY" ]; then
+            echo "This is the template; nothing to update." >> "$GITHUB_STEP_SUMMARY"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pull the engine from the template
+        if: steps.self.outputs.skip != 'true'
+        run: |
+          if [ "$HAS_TOKEN" = "true" ]; then scripts/update-engine.sh; else scripts/update-engine.sh --no-workflows; fi
+
+      - name: Open or update the pull request
+        if: steps.self.outputs.skip != 'true'
+        run: |
+          if [ -z "$(git status --porcelain -- . ':!.engine-workflows-differ' ':!.engine-workflows.diff')" ]; then
+            echo "Engine is up to date." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          template=$(python3 scripts/fdpconfig.py get template.repository)
+          {
+            echo "Updates the engine (paths in \`.fdp-engine\`) from [$template](https://github.com/$template). Content is unchanged."
+            echo
+            git status --short | grep -v engine-workflows | sed 's/^/    /'
+            if [ -f .engine-workflows-differ ]; then
+              echo
+              echo "**Workflow files also changed in the template** but GitHub's built-in token cannot update them."
+              echo "Run \`scripts/update-engine.sh\` locally and commit, or add an \`ENGINE_UPDATE_TOKEN\` secret."
+              echo
+              echo '<details><summary>Workflow diff</summary>'
+              echo
+              echo '```diff'
+              head -c 60000 .engine-workflows.diff
+              echo '```'
+              echo '</details>'
+            fi
+          } > "$RUNNER_TEMP/pr.md"
+          rm -f .engine-workflows-differ .engine-workflows.diff
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add -A
+          git commit -m "Update engine from $template"
+          git push --force origin "$BRANCH"
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --body-file "$RUNNER_TEMP/pr.md"
+          elif ! gh pr create --base "$(python3 scripts/fdpconfig.py get branch)" --head "$BRANCH" --title "Update engine from template" --body-file "$RUNNER_TEMP/pr.md"; then
+            echo "Could not open a pull request (Actions may not be allowed to); open it here: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/$(python3 scripts/fdpconfig.py get branch)...${BRANCH}?expand=1" >> "$GITHUB_STEP_SUMMARY"
+          fi

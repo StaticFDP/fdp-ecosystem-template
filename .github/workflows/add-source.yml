@@ -1,0 +1,100 @@
+name: Add data source from issue
+
+# Turns an "Add a data source" issue (label: data-source) into a branch with the
+# generated catalog.ttl and index entry, validates it, and opens a pull request.
+# Editing the issue regenerates the branch.
+#
+# The issue body is untrusted input: it only ever reaches the generator through a
+# file, never through ${{ }} expansion inside a shell script.
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: add-source-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    if: contains(github.event.issue.labels.*.name, 'data-source') && github.event.issue.state == 'open'
+    runs-on: ubuntu-latest
+    env:
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+      ISSUE_BODY: ${{ github.event.issue.body }}
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: data-source/issue-${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install rdflib
+
+      - name: Generate catalog from the issue
+        id: gen
+        run: |
+          printf '%s' "$ISSUE_BODY" > "$RUNNER_TEMP/issue.md"
+          if python scripts/add_source.py --issue-body "$RUNNER_TEMP/issue.md" \
+               --summary "$RUNNER_TEMP/pr.md" --title-file "$RUNNER_TEMP/title.txt" \
+               2> "$RUNNER_TEMP/error.txt"; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report a problem with the form
+        if: steps.gen.outputs.ok == 'false'
+        run: |
+          {
+            echo "I could not turn this issue into a catalog:"
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/error.txt"
+            echo '```'
+            echo
+            echo "Edit the issue to fix it; this check runs again automatically."
+          } > "$RUNNER_TEMP/comment.md"
+          gh issue comment "$ISSUE_NUMBER" --body-file "$RUNNER_TEMP/comment.md"
+          exit 1
+
+      - name: Validate all Turtle
+        run: python scripts/validate.py
+
+      - name: Push branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add fdp
+          git commit -m "$(cat "$RUNNER_TEMP/title.txt")" -m "Generated from issue #$ISSUE_NUMBER."
+          git push --force origin "$BRANCH"
+
+      - name: Open or update the pull request
+        run: |
+          printf '\n\nCloses #%s\n' "$ISSUE_NUMBER" >> "$RUNNER_TEMP/pr.md"
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --title "$(cat "$RUNNER_TEMP/title.txt")" --body-file "$RUNNER_TEMP/pr.md"
+            gh issue comment "$ISSUE_NUMBER" --body "Updated pull request #$existing from the edited issue."
+          elif gh pr create --base main --head "$BRANCH" --title "$(cat "$RUNNER_TEMP/title.txt")" --body-file "$RUNNER_TEMP/pr.md"; then
+            gh issue comment "$ISSUE_NUMBER" --body "Opened a pull request for this data source: $(gh pr view "$BRANCH" --json url --jq .url)"
+          else
+            # Repositories that do not allow Actions to create pull requests: hand over a one-click link.
+            compare="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/main...${BRANCH}?expand=1"
+            {
+              echo "The catalog is ready on branch \`$BRANCH\` and passes validation."
+              echo
+              echo "**[Open the pull request]($compare)** (GitHub Actions is not allowed to open it in this repository)."
+              echo
+              cat "$RUNNER_TEMP/pr.md"
+            } > "$RUNNER_TEMP/comment.md"
+            gh issue comment "$ISSUE_NUMBER" --body-file "$RUNNER_TEMP/comment.md"
+          fi

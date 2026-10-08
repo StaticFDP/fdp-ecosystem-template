@@ -1,0 +1,119 @@
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix fdp:     <https://w3id.org/fdp/fdp-o#> .
+@prefix r3d:     <http://www.re3data.org/schema/3-0#> .
+@prefix am:      <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/vocab/access-methods#> .
+@prefix :        <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/wikidata-fdp/> .
+
+<https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/wikidata-fdp/>
+    a fdp:MetadataService, r3d:Repository ;
+    dcterms:title "Wikidata — example source (replace or remove) FAIR Data Point — FDP Ecosystem Template"@en ;
+    dcterms:publisher :publisher-source ;
+    dcterms:modified "2026-10-08"^^xsd:date ;
+    fdp:hasCatalog :catalog .
+
+:catalog
+    a dcat:Catalog ;
+    dcterms:title "Wikidata — example source (replace or remove)"@en ;
+    dcterms:description "An example catalog showing the conventions: one dataset, every way to get it, each typed with an access method and a How to get it recipe. Replace it with your own sources."@en ;
+    dcterms:publisher :publisher-source ;
+    dcterms:license <https://creativecommons.org/publicdomain/zero/1.0/> ;
+    dcat:landingPage <https://www.wikidata.org> ;
+    dcat:dataset :wikidata-live .
+
+:wikidata-live
+    a dcat:Dataset ;
+    dcterms:title "Wikidata knowledge graph"@en ;
+    dcterms:description "The collaboratively edited knowledge graph behind Wikipedia: over 100 million items with statements, labels and identifiers."@en ;
+    dcat:version "live" ;
+    dcterms:publisher :publisher-source ;
+    dcterms:license <https://creativecommons.org/publicdomain/zero/1.0/> ;
+    dcat:distribution :dist-wikidata-org-items-and-search , :dist-wikidata-query-service-wdqs , :dist-wikidata-on-qlever , :dist-wikibase-rest-api , :dist-linked-data-per-entity-special , :dist-truthy-statements-dump-n-triples , :dist-full-json-dump .
+
+:dist-wikidata-org-items-and-search
+    a dcat:Distribution ;
+    dcterms:title "wikidata.org — items and search"@en ;
+    dcterms:description "How to get it: Search an entity; every item has a stable IRI http://www.wikidata.org/entity/Q… that redirects to its page."@en ;
+    dcterms:type am:web-portal ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/text/html> ;
+    dcat:accessURL <https://www.wikidata.org/wiki/Wikidata:Main_Page> .
+
+:dist-wikidata-query-service-wdqs
+    a dcat:Distribution ;
+    dcterms:title "Wikidata Query Service (WDQS)"@en ;
+    dcterms:description "How to get it: SPARQL 1.1 at https://query.wikidata.org/sparql; send a descriptive User-Agent; queries time out after 60 s."@en ;
+    dcterms:type am:sparql-endpoint ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/application/sparql-results+json> ;
+    dcat:accessService :svc-dist-wikidata-query-service-wdqs ;
+    dcat:accessURL <https://query.wikidata.org/> .
+
+:svc-dist-wikidata-query-service-wdqs
+    a dcat:DataService ;
+    dcterms:title "Wikidata Query Service (WDQS)"@en ;
+    dcat:endpointURL <https://query.wikidata.org/sparql> ;
+    dcat:endpointDescription <https://www.mediawiki.org/wiki/Wikidata_Query_Service/User_Manual> ;
+    dcterms:conformsTo <https://www.w3.org/TR/sparql11-protocol/> ;
+    dcterms:publisher :publisher-source .
+
+:dist-wikidata-on-qlever
+    a dcat:Distribution ;
+    dcterms:title "Wikidata on QLever"@en ;
+    dcterms:description "How to get it: SPARQL at https://qlever.dev/api/wikidata; much faster for large aggregations, updated less often than WDQS."@en ;
+    dcterms:type am:sparql-endpoint ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/application/sparql-results+json> ;
+    dcat:accessService :svc-dist-wikidata-on-qlever ;
+    dcat:accessURL <https://qlever.dev/wikidata> .
+
+:svc-dist-wikidata-on-qlever
+    a dcat:DataService ;
+    dcterms:title "Wikidata on QLever"@en ;
+    dcat:endpointURL <https://qlever.dev/api/wikidata> ;
+    dcterms:conformsTo <https://www.w3.org/TR/sparql11-protocol/> ;
+    dcterms:publisher :publisher-source .
+
+:dist-wikibase-rest-api
+    a dcat:Distribution ;
+    dcterms:title "Wikibase REST API"@en ;
+    dcterms:description "How to get it: GET https://www.wikidata.org/w/rest.php/wikibase/v1/entities/items/Q42 returns one item as JSON."@en ;
+    dcterms:type am:rest-api ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/application/json> ;
+    dcat:accessService :svc-dist-wikibase-rest-api ;
+    dcat:accessURL <https://doc.wikimedia.org/Wikibase/master/js/rest-api/> .
+
+:svc-dist-wikibase-rest-api
+    a dcat:DataService ;
+    dcterms:title "Wikibase REST API"@en ;
+    dcat:endpointURL <https://www.wikidata.org/w/rest.php/wikibase/v1/> ;
+    dcterms:publisher :publisher-source .
+
+:dist-linked-data-per-entity-special
+    a dcat:Distribution ;
+    dcterms:title "Linked Data per entity (Special:EntityData)"@en ;
+    dcterms:description "How to get it: GET https://www.wikidata.org/wiki/Special:EntityData/Q42.ttl (or .json, .nt, .rdf) for one entity's RDF."@en ;
+    dcterms:type am:rest-api ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/text/turtle> ;
+    dcat:accessURL <https://www.wikidata.org/wiki/Special:EntityData/Q42.ttl> .
+
+:dist-truthy-statements-dump-n-triples
+    a dcat:Distribution ;
+    dcterms:title "Truthy statements dump — N-Triples"@en ;
+    dcterms:description "How to get it: Weekly full dump of the best-ranked statements; load into any triple store."@en ;
+    dcterms:type am:rdf-dump ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/application/n-triples> ;
+    dcat:downloadURL <https://dumps.wikimedia.org/wikidatawiki/entities/latest-truthy.nt.gz> ;
+    dcat:accessURL <https://dumps.wikimedia.org/wikidatawiki/entities/> .
+
+:dist-full-json-dump
+    a dcat:Distribution ;
+    dcterms:title "Full JSON dump"@en ;
+    dcterms:description "How to get it: Weekly dump of all entities, one JSON object per line."@en ;
+    dcterms:type am:bulk-download ;
+    dcat:mediaType <https://www.iana.org/assignments/media-types/application/gzip> ;
+    dcat:downloadURL <https://dumps.wikimedia.org/wikidatawiki/entities/latest-all.json.gz> ;
+    dcat:accessURL <https://www.wikidata.org/wiki/Wikidata:Database_download> .
+
+:publisher-source a foaf:Organization ; foaf:name "Wikimedia Foundation"@en ; foaf:homepage <https://www.wikimedia.org> .
+:publisher-curator a foaf:Person ; foaf:name "Andra Waagmeester" ; foaf:homepage <https://orcid.org/0000-0001-9773-4008> .

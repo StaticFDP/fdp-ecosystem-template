@@ -1,0 +1,81 @@
+name: FAIR assessment
+
+# Walks the FAIR Data Point level by level (ldp:contains, fdp:metadataCatalog,
+# dcat:catalog/dataset/service/distribution) and runs the OSTrails FAIR Champion
+# tests in fair/tests.txt on every resource that resolves. The summary appears on
+# the run page; the report is published on the website (#/fair) by the Pages
+# workflow, which this workflow re-triggers when it assessed our own FDP.
+#
+# The test service is shared infrastructure: runs are weekly, after content deploys,
+# or manual, and use few parallel requests.
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"          # Mondays 04:17 UTC
+  workflow_run:
+    workflows: ["Deploy viewer to GitHub Pages"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      start:
+        description: FDP to assess (its root, or a web page that links it with rel=describedby). Empty = this FDP.
+        default: ""
+      depth:
+        description: How deep to walk
+        type: choice
+        options: [fdp, catalog, dataset, distribution]
+        default: catalog
+
+permissions:
+  contents: read
+  actions: write      # re-trigger the Pages deploy to publish the report
+
+concurrency:
+  group: fair-assessment
+  cancel-in-progress: true
+
+jobs:
+  assess:
+    # After a deploy, only when it was a content push; the deploy this workflow
+    # triggers itself (workflow_dispatch) must not start another assessment.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 180   # a full-depth run of ~2,700 calls takes 30-75 min
+    env:
+      START_INPUT: ${{ inputs.start }}
+      DEPTH_INPUT: ${{ inputs.depth }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install rdflib
+
+      - name: Read this FDP's settings
+        run: |
+          site=$(python scripts/fdpconfig.py get siteUrl)
+          echo "SITE=$site" >> "$GITHUB_ENV"
+          echo "START=${START_INPUT:-$site}" >> "$GITHUB_ENV"
+          echo "DEPTH=${DEPTH_INPUT:-$(python scripts/fdpconfig.py get fair.depth || echo catalog)}" >> "$GITHUB_ENV"
+
+      - name: Walk the FDP and run the FAIR tests
+        run: |
+          # Our own canonical IRIs are fetched from the website copy, which serves text/turtle.
+          python scripts/fair_assess.py --start "$START" --depth "$DEPTH" --workers 3 --out fair-report \
+            --rewrite "$(python scripts/fdpconfig.py get baseIri)=${SITE}fdp/"
+          cat fair-report/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fair-report
+          path: fair-report/
+          retention-days: 90
+
+      - name: Publish on the website
+        if: env.START == env.SITE
+        run: gh workflow run pages.yml --ref main

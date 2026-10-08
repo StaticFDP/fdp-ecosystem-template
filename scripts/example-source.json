@@ -1,0 +1,32 @@
+{
+  "slug": "world-flora-online",
+  "mode": "curated",
+  "title": "World Flora Online — global plant taxonomy",
+  "description": "Consensus classification of all known plant species, curated by Taxonomic Expert Networks.",
+  "publisher": { "name": "World Flora Online Consortium", "homepage": "https://www.worldfloraonline.org" },
+  "license": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "landingPage": "https://www.worldfloraonline.org",
+  "datasets": [
+    {
+      "title": "WFO taxonomic backbone",
+      "version": "latest",
+      "description": "Static release of the backbone; every version has its own DOI.",
+      "distributions": [
+        {
+          "method": "web-portal",
+          "title": "worldfloraonline.org — search and browse",
+          "url": "https://www.worldfloraonline.org",
+          "howto": "Search a plant name; each taxon has a stable wfo-… identifier."
+        },
+        {
+          "method": "darwin-core-archive",
+          "title": "WFO backbone — Darwin Core Archive",
+          "url": "https://doi.org/10.5281/zenodo.18007552",
+          "download": "https://doi.org/10.5281/zenodo.18007552",
+          "mediaType": "application/zip",
+          "howto": "The latest zip is always at this DOI, with all earlier versions."
+        }
+      ]
+    }
+  ]
+}

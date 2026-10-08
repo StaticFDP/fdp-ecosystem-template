@@ -1,0 +1,96 @@
+name: Add a data source
+description: Describe a data resource (or link its FAIR Data Point). A bot turns this into a pull request.
+title: "Add data source: "
+labels: ["data-source"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill this in and submit. A GitHub Action turns it into a `catalog.ttl`, validates it and opens a pull request that links back here.
+        Edit the issue to regenerate the pull request. Conventions are in [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md).
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Kind of source
+      description: "Curated: you describe every way to get the data below. Live: the source already runs its own FAIR Data Point; the viewer reads it directly."
+      options:
+        - "Curated: describe it here"
+        - "Live: link its own FAIR Data Point"
+    validations:
+      required: true
+  - type: input
+    id: slug
+    attributes:
+      label: Short id
+      description: Lowercase letters, digits and hyphens; becomes the folder name `fdp/<id>-fdp/`.
+      placeholder: world-flora-online
+    validations:
+      required: true
+  - type: input
+    id: title
+    attributes:
+      label: Name
+      placeholder: World Flora Online — global plant taxonomy
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: One or two sentences on what the resource contains.
+  - type: input
+    id: publisher
+    attributes:
+      label: Publisher
+      description: Organisation that publishes the data (required for curated sources).
+      placeholder: World Flora Online Consortium
+  - type: input
+    id: publisher_url
+    attributes:
+      label: Publisher website
+      placeholder: https://www.worldfloraonline.org
+  - type: input
+    id: license
+    attributes:
+      label: Licence
+      description: URL of the licence, e.g. https://creativecommons.org/licenses/by/4.0/
+  - type: input
+    id: website
+    attributes:
+      label: Website
+      description: Landing page of the resource.
+  - type: input
+    id: fdp_url
+    attributes:
+      label: FAIR Data Point URL
+      description: "Live sources only: the FDP root. It must return Turtle and allow cross-site reads (Access-Control-Allow-Origin)."
+      placeholder: https://w3id.org/bgv-fdp
+  - type: input
+    id: dataset_title
+    attributes:
+      label: Dataset title
+      description: "Curated only. Defaults to the name above."
+  - type: input
+    id: dataset_version
+    attributes:
+      label: Dataset version
+      description: "Curated only: release, snapshot date or 'live'."
+      placeholder: "2026-10"
+  - type: textarea
+    id: dataset_description
+    attributes:
+      label: Dataset description
+  - type: textarea
+    id: distributions
+    attributes:
+      label: Ways to get the data
+      description: |
+        Curated only. One line per way to get the data: `access method | title | URL | how to get it`.
+        Access methods: web-portal, rest-api, sparql-endpoint, bulk-download, cloud-object-storage, darwin-core-archive,
+        rdf-dump, source-repository, aggregator-mirror, oai-pmh, sql-query, change-feed.
+        Start a line with `# title | version | description` to begin another dataset.
+      render: text
+      placeholder: |
+        web-portal | WFO website | https://www.worldfloraonline.org | Search a plant name; each taxon has a wfo- identifier.
+        darwin-core-archive | WFO backbone (DwC-A) | https://doi.org/10.5281/zenodo.18007552 | Latest zip; all versions have DOIs.
+        sparql-endpoint | WFO on QLever | https://example.org/sparql | SPARQL 1.1, no key needed.

@@ -1,0 +1,13 @@
+# Paths owned by the FDP ecosystem engine (https://github.com/StaticFDP/fdp-ecosystem-template).
+# "Update engine" replaces them with the template's current version. Everything else is this
+# instance's own content: fdp.config.json, fdp/, assets/, README.md, PERSISTENCE.md, w3id/.
+.fdp-engine
+.gitignore
+.github/workflows/
+.github/ISSUE_TEMPLATE/
+scripts/
+site/
+fair/tests.txt
+CONTRIBUTING.md
+CLAUDE.md
+LICENSE

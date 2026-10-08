@@ -1,0 +1,43 @@
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix am:      <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/vocab/access-methods#> .
+
+# Small controlled vocabulary used as dcterms:type on every dcat:Distribution,
+# so a client can ask "how can I get this?" without parsing free text.
+
+am:scheme
+    a skos:ConceptScheme ;
+    dcterms:title "FDP ecosystem — access methods"@en ;
+    dcterms:description "Ways a distribution can be obtained: browsing, APIs, query endpoints, bulk files, cloud buckets and mirrors in aggregators."@en ;
+    dcterms:modified "2026-10-06"^^xsd:date ;
+    skos:hasTopConcept am:web-portal , am:rest-api , am:sparql-endpoint , am:bulk-download ,
+        am:cloud-object-storage , am:darwin-core-archive , am:rdf-dump , am:source-repository ,
+        am:aggregator-mirror , am:oai-pmh , am:sql-query , am:change-feed .
+
+am:web-portal            a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "Web portal"@en ;
+    skos:definition "Human-oriented website for searching and browsing records one at a time."@en .
+am:rest-api              a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "REST / web API"@en ;
+    skos:definition "Programmatic HTTP API returning JSON/XML, usually paged and rate limited."@en .
+am:sparql-endpoint       a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "SPARQL endpoint"@en ;
+    skos:definition "RDF graph queryable through the SPARQL 1.1 protocol."@en .
+am:bulk-download         a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "Bulk file download"@en ;
+    skos:definition "Complete dump or export file fetched over HTTP(S) or FTP."@en .
+am:cloud-object-storage  a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "Cloud object storage"@en ;
+    skos:definition "Files in a public cloud bucket (e.g. AWS S3), readable in place by Spark, DuckDB, Athena or the aws CLI."@en .
+am:darwin-core-archive   a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "Darwin Core Archive"@en ;
+    skos:broader am:bulk-download ;
+    skos:definition "Zipped DwC-A (meta.xml + EML + delimited core/extension files)."@en .
+am:rdf-dump              a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "RDF dump"@en ;
+    skos:broader am:bulk-download ;
+    skos:definition "Bulk RDF serialisation (Turtle, N-Triples, RDF/XML) for loading into a triple store."@en .
+am:source-repository     a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "Version-controlled repository"@en ;
+    skos:definition "Data files kept in a git repository (clone, pull, diff)."@en .
+am:aggregator-mirror     a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "Copy in an aggregator"@en ;
+    skos:definition "Subset or copy of the data republished by another infrastructure (e.g. GBIF, QLever, Koetai), possibly transformed."@en .
+am:oai-pmh               a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "OAI-PMH harvesting"@en ;
+    skos:definition "Incremental metadata harvesting via the OAI-PMH protocol."@en .
+am:sql-query             a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "SQL query service"@en ;
+    skos:definition "Server-side SQL over the data, result delivered as a file."@en .
+am:change-feed           a skos:Concept ; skos:inScheme am:scheme ; skos:prefLabel "Change feed / replication diffs"@en ;
+    skos:definition "Incremental updates (diffs) to keep a local copy in sync."@en .

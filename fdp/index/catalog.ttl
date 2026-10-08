@@ -1,0 +1,37 @@
+@prefix dcat:    <http://www.w3.org/ns/dcat#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf:    <http://xmlns.com/foaf/0.1/> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix fdp:     <https://w3id.org/fdp/fdp-o#> .
+@prefix r3d:     <http://www.re3data.org/schema/3-0#> .
+@prefix ldp:     <http://www.w3.org/ns/ldp#> .
+@prefix pim:     <http://www.w3.org/2000/10/swap/pim/doc#> .
+@prefix :        <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/index/> .
+
+<https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/index/>
+    a fdp:MetadataService, r3d:Repository ;
+    dcterms:title "FDP Ecosystem Template — index"@en ;
+    dcterms:description "Index of this FAIR Data Point. Each sub-catalog describes one resource and lists every way to obtain it: native portal and APIs, bulk files, cloud buckets and copies in aggregators."@en ;
+    dcterms:publisher :publisher-curator ;
+    # Both addresses identify this FDP: the canonical IRI and the website that serves it (with text/turtle).
+    dcterms:identifier "https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/index/" ,
+        "https://staticfdp.github.io/fdp-ecosystem-template/" ;
+    dcterms:license <https://creativecommons.org/publicdomain/zero/1.0/> ;
+    dcat:landingPage <https://staticfdp.github.io/fdp-ecosystem-template/> ;
+    pim:persistencePolicy <https://github.com/StaticFDP/fdp-ecosystem-template/blob/main/PERSISTENCE.md> ;
+    dcterms:modified "2026-10-08"^^xsd:date ;
+    rdfs:seeAlso <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/vocab/access-methods.ttl> ;
+    # The catalog documents themselves, for clients that follow LDP containment.
+    ldp:contains
+        <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/wikidata-fdp/catalog.ttl> ;
+    fdp:hasCatalog
+        :catalog-wikidata .
+
+:catalog-wikidata
+    a dcat:Catalog ;
+    dcterms:title "Wikidata — example source (replace or remove)"@en ;
+    dcterms:license <https://creativecommons.org/publicdomain/zero/1.0/> ;
+    rdfs:seeAlso <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/wikidata-fdp/catalog.ttl> .
+
+:publisher-curator a foaf:Person ; foaf:name "Andra Waagmeester" ; foaf:homepage <https://orcid.org/0000-0001-9773-4008> .

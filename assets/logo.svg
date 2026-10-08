@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" color="#24507a">
+  <!-- Three layers: catalog, dataset, distribution -->
+  <path d="M12 2.8 21.2 7.4 12 12 2.8 7.4Z" fill="currentColor"/>
+  <path d="M2.8 12 12 16.6 21.2 12M2.8 16.6 12 21.2 21.2 16.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

@@ -1,0 +1,18 @@
+name: Validate FDP Turtle
+
+on:
+  push:
+    paths: ["fdp/**", "scripts/validate.py"]
+  pull_request:
+    paths: ["fdp/**", "scripts/validate.py"]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install rdflib
+      - run: python scripts/validate.py
