@@ -3,20 +3,57 @@
   "name": "FDP Ecosystem Template",
   "repository": "StaticFDP/fdp-ecosystem-template",
   "branch": "main",
-  "siteUrl": "https://staticfdp.github.io/fdp-ecosystem-template/",
+  "siteUrl": "https://fdp.semscape.org/fdp-ecosystem-template/",
   "baseIri": "https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/",
   "indexFolder": "index",
   "headline": "Every way to get the *data* you need",
   "description": "A static FAIR Data Point that describes every way to obtain each resource: portals, APIs, SPARQL endpoints, bulk dumps, cloud buckets and copies in aggregators.",
-  "keywords": ["FAIR Data Point", "DCAT", "data access", "SPARQL", "FAIR"],
-  "maintainer": { "name": "Andra Waagmeester", "github": "andrawaag", "orcid": "0000-0001-9773-4008" },
+  "keywords": [
+    "FAIR Data Point",
+    "DCAT",
+    "data access",
+    "SPARQL",
+    "FAIR"
+  ],
+  "maintainer": {
+    "name": "Andra Waagmeester",
+    "github": "andrawaag",
+    "orcid": "0000-0001-9773-4008"
+  },
   "theme": {
     "logo": "assets/logo.svg",
     "headingFont": "Source Serif 4",
     "bodyFont": "Source Sans 3",
-    "light": { "primary": "#24507a", "primaryHover": "#33689b", "tint": "#f2f5f9", "tint2": "#e3eaf3", "text": "#142233", "sub": "#566577", "faint": "#8a97a6", "border": "#dde4ec", "codeBg": "#f5f7fa" },
-    "dark":  { "primary": "#8db6e3", "primaryHover": "#a9c9ec", "bg": "#0e141b", "surface": "#141c25", "tint": "#17212c", "tint2": "#1f2c3a", "text": "#e6edf4", "sub": "#a1afbe", "faint": "#6c7a89", "border": "#26323f", "codeBg": "#111921" }
+    "light": {
+      "primary": "#24507a",
+      "primaryHover": "#33689b",
+      "tint": "#f2f5f9",
+      "tint2": "#e3eaf3",
+      "text": "#142233",
+      "sub": "#566577",
+      "faint": "#8a97a6",
+      "border": "#dde4ec",
+      "codeBg": "#f5f7fa"
+    },
+    "dark": {
+      "primary": "#8db6e3",
+      "primaryHover": "#a9c9ec",
+      "bg": "#0e141b",
+      "surface": "#141c25",
+      "tint": "#17212c",
+      "tint2": "#1f2c3a",
+      "text": "#e6edf4",
+      "sub": "#a1afbe",
+      "faint": "#6c7a89",
+      "border": "#26323f",
+      "codeBg": "#111921"
+    }
   },
-  "fair": { "depth": "catalog" },
-  "template": { "repository": "StaticFDP/fdp-ecosystem-template", "branch": "main" }
+  "fair": {
+    "depth": "catalog"
+  },
+  "template": {
+    "repository": "StaticFDP/fdp-ecosystem-template",
+    "branch": "main"
+  }
 }

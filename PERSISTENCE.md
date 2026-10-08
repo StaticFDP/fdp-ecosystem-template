@@ -1,6 +1,6 @@
 # Persistence policy
 
-This policy covers the FDP Ecosystem Template metadata in this repository: the Turtle files under `fdp/`, and the website at <https://staticfdp.github.io/fdp-ecosystem-template/>.
+This policy covers the FDP Ecosystem Template metadata in this repository: the Turtle files under `fdp/`, and the website at <https://fdp.semscape.org/fdp-ecosystem-template/>.
 
 ## What is kept
 
@@ -11,7 +11,7 @@ This policy covers the FDP Ecosystem Template metadata in this repository: the T
 ## Where it is served
 
 - **Canonical IRIs:** `https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/…`
-- **Website copy:** <https://staticfdp.github.io/fdp-ecosystem-template/fdp/…>, served as `text/turtle`
+- **Website copy:** <https://fdp.semscape.org/fdp-ecosystem-template/fdp/…>, served as `text/turtle`
 
 If the repository moves, every IRI is rewritten with `scripts/set-base.sh` and the move is announced in the README.
 

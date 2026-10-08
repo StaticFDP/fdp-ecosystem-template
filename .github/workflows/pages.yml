@@ -9,7 +9,7 @@ on:
 
 permissions:
   contents: write   # commit the regenerated contributors.ttl back to main
-  actions: read     # download the latest FAIR assessment report
+  actions: write    # download the latest FAIR report; redeploy after recording the site address
   pages: write
   id-token: write
 
@@ -88,3 +88,21 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      # GitHub decides the real address (e.g. an organisation's custom domain). When it differs from
+      # siteUrl in fdp.config.json, record it in the config and metadata, then deploy once more.
+      - uses: actions/checkout@v4
+      - name: Record the site's real address
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git pull -q --ff-only origin "$GITHUB_REF_NAME" || true
+          if [ "$(python3 scripts/set-site-url.py "$PAGE_URL")" != "unchanged" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "Record the site address $PAGE_URL"
+            git push origin HEAD:"$GITHUB_REF_NAME"
+            gh workflow run pages.yml --ref "$GITHUB_REF_NAME"
+          fi

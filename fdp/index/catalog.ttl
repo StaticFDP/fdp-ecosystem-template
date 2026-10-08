@@ -16,9 +16,9 @@
     dcterms:publisher :publisher-curator ;
     # Both addresses identify this FDP: the canonical IRI and the website that serves it (with text/turtle).
     dcterms:identifier "https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/index/" ,
-        "https://staticfdp.github.io/fdp-ecosystem-template/" ;
+        "https://fdp.semscape.org/fdp-ecosystem-template/" ;
     dcterms:license <https://creativecommons.org/publicdomain/zero/1.0/> ;
-    dcat:landingPage <https://staticfdp.github.io/fdp-ecosystem-template/> ;
+    dcat:landingPage <https://fdp.semscape.org/fdp-ecosystem-template/> ;
     pim:persistencePolicy <https://github.com/StaticFDP/fdp-ecosystem-template/blob/main/PERSISTENCE.md> ;
     dcterms:modified "2026-10-08"^^xsd:date ;
     rdfs:seeAlso <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/vocab/access-methods.ttl> ;
