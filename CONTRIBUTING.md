@@ -113,7 +113,8 @@ Names come from Wikidata when your GitHub account is linked there. Add **[P2037 
 
 The *FAIR assessment* workflow ([`.github/workflows/fair.yml`](.github/workflows/fair.yml)) walks the FDP level by level, following `ldp:contains`, `fdp:metadataCatalog`/`fdp:hasCatalog`, `dcat:catalog`, `dcat:dataset`, `dcat:service` and `dcat:distribution`. It runs the [OSTrails FAIR Champion](https://tests.ostrails.eu/) tests listed in [`fair/tests.txt`](fair/tests.txt) on every resource that resolves.
 
-- **When it runs:** every Monday, after each deploy triggered by a push, or manually (*Actions → FAIR assessment → Run workflow*). You can choose another FDP to assess and a depth: `fdp`, `catalog`, `dataset` or `distribution`.
+- **How it assesses:** one call per resource to the [FAIR Champion algorithm](https://w3id.org/FAIR-Champion/assess/algorithm/d/1UvHnRkKy3KZMlWdIdB7rz0LrBZJXpPibAgmTXJwRO_0), which runs all current OSTrails metrics; the FTR JSON-LD reports are in the run artifact. Only resources whose metadata changed since the published report are re-assessed (plus anything older than 30 days), so it runs after every content commit.
+- **When it runs:** after each deploy triggered by a push, every Monday, or manually (*Actions → FAIR assessment → Run workflow*). You can choose another FDP to assess, a depth (`fdp`, `catalog`, `dataset` or `distribution`), and *full* to re-assess everything.
 - **Where results appear:**
   - the run's summary page
   - a `fair-report` artifact

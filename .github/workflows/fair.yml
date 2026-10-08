@@ -1,8 +1,11 @@
 name: FAIR assessment
 
 # Walks the FAIR Data Point level by level (ldp:contains, fdp:metadataCatalog,
-# dcat:catalog/dataset/service/distribution) and runs the OSTrails FAIR Champion
-# tests in fair/tests.txt on every resource that resolves. The summary appears on
+# dcat:catalog/dataset/service/distribution) and assesses every resource that
+# resolves with the FAIR Champion algorithm (all current OSTrails metrics in one
+# call). Incremental: only resources whose metadata changed since the published
+# report are re-assessed (and anything older than 30 days), so it can run on
+# every commit. The summary appears on
 # the run page; the report is published on the website (#/fair) by the Pages
 # workflow, which this workflow re-triggers when it assessed our own FDP.
 #
@@ -25,6 +28,10 @@ on:
         type: choice
         options: [fdp, catalog, dataset, distribution]
         default: catalog
+      full:
+        description: Re-assess every resource, also the unchanged ones
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -46,6 +53,7 @@ jobs:
     env:
       START_INPUT: ${{ inputs.start }}
       DEPTH_INPUT: ${{ inputs.depth }}
+      FULL: ${{ inputs.full && 'true' || '' }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +74,7 @@ jobs:
       - name: Walk the FDP and run the FAIR tests
         run: |
           # Our own canonical IRIs are fetched from the website copy, which serves text/turtle.
-          python scripts/fair_assess.py --start "$START" --depth "$DEPTH" --workers 3 --out fair-report \
+          python scripts/fair_assess.py --start "$START" --depth "$DEPTH" --workers 3 --out fair-report ${FULL:+--full} \
             --rewrite "$(python scripts/fdpconfig.py get baseIri)=${SITE}fdp/"
           cat fair-report/summary.md >> "$GITHUB_STEP_SUMMARY"
 

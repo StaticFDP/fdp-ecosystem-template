@@ -16,11 +16,22 @@ Nodes that do not resolve are reported as such and not sent to the test service.
 
 (Without --start/--rewrite the values from fdp.config.json are used.)
 
+By default every resource is assessed with one call to a FAIR Champion
+*algorithm* (all current metrics at once; --algorithm), and the FTR JSON-LD
+report of each call is kept in <out>/ftr/. --per-test runs the tests in
+fair/tests.txt one by one instead.
+
+Assessments are incremental: each resource carries a fingerprint (SHA-256 of the
+document that describes it). Resources whose fingerprint matches the previous
+report (--previous, by default the one published on the site) keep their results
+unless those are older than --max-age-days; --full re-tests everything.
+
 Outputs report.json and summary.md in --out. The test service is shared
-infrastructure: keep --workers low and do not run deep assessments often.
+infrastructure: keep --workers low.
 """
 import argparse
 import datetime
+import hashlib
 import json
 import re
 import subprocess
@@ -37,6 +48,8 @@ from fdpconfig import BASE_IRI, ROOT, SITE_URL  # noqa: E402
 FDPO = Namespace("https://w3id.org/fdp/fdp-o#")
 LDP = Namespace("http://www.w3.org/ns/ldp#")
 TEST_API = "https://tests.ostrails.eu/tests/assess/test/"
+# All current OSTrails core metrics in one call (Mark Wilkinson, FAIR Champion).
+ALGORITHM = "https://w3id.org/FAIR-Champion/assess/algorithm/d/1UvHnRkKy3KZMlWdIdB7rz0LrBZJXpPibAgmTXJwRO_0"
 LEVELS = ["fdp", "catalog", "dataset", "distribution", "service"]
 DEPTH = {"fdp": 0, "catalog": 1, "dataset": 2, "distribution": 3}
 LINKS = [LDP.contains, FDPO.metadataCatalog, FDPO.hasCatalog, DCAT.catalog, DCAT.dataset, DCAT.service, DCAT.distribution]
@@ -86,6 +99,7 @@ class Walker:
         self.rewrite, self.max_depth, self.max_nodes = rewrite, max_depth, max_nodes
         self.g = Graph()
         self.docs = {}        # fetched document URL → main subject IRI (or None)
+        self.fingerprints = {}  # fetched document URL → SHA-256 of its body
         self.nodes = {}       # node IRI → info
 
     def url(self, iri):
@@ -110,6 +124,7 @@ class Walker:
             if not resp or resp[0] >= 400:
                 return None, f"describedby link {alt} did not resolve"
             status, final, ctype, _, body = resp
+        self.fingerprints[final] = hashlib.sha256(body.encode()).hexdigest()
         fmt = "json-ld" if "json" in ctype else "xml" if "xml" in ctype else "turtle"
         g = Graph()
         try:
@@ -155,7 +170,8 @@ class Walker:
         s = URIRef(iri)
         title = next((str(o) for p in (DCTERMS.title, RDFS.label) for o in self.g.objects(s, p)), None)
         self.nodes[iri] = {"iri": iri, "level": self.level(s), "title": title, "parent": parent, "depth": depth,
-                           "guid": guid, "document": doc, "note": note, "results": {}}
+                           "guid": guid, "document": doc, "note": note, "fingerprint": self.fingerprints.get(doc),
+                           "results": {}}
         return True
 
     def walk(self, start):
@@ -214,15 +230,58 @@ def run_test(test, guid):
     return {"value": value, "summary": (verdicts[-1] if verdicts else "")[:300]}
 
 
+def test_id(url):
+    """Short id of a test, e.g. test_FM_F1_M_IdentUnique, from its IRI."""
+    return url.rstrip("/").rsplit("/", 1)[-1]
+
+
+def run_algorithm(algorithm, guid):
+    """All metrics in one call. Returns ({test id: result}, [test descriptions], FTR JSON-LD string)."""
+    try:
+        raw = subprocess.run(["curl", "-sS", "-m", "900", "-L", "--post301", "--post302", "--post303", "-X", "POST",
+                              "-H", "Content-Type: application/json", "-H", "Accept: application/json",
+                              "-d", json.dumps({"guid": guid}), algorithm],
+                             capture_output=True, text=True, timeout=920).stdout
+        d = json.loads(raw)
+    except Exception as e:  # noqa: BLE001 - record and carry on
+        return {}, [], None, f"assessment service error: {str(e)[:120]}"
+    by_ref = {t["reference"]: t for t in d.get("tests", [])}
+    narrative = {}
+    for c, text in zip(d.get("conditions", []), d.get("narratives", [])):
+        narrative[c.get("condition", "").split("_", 1)[-1]] = text
+    results, tests = {}, []
+    for ref, r in (d.get("test_results") or {}).items():
+        t = by_ref.get(ref, {})
+        tid = test_id(t.get("testid", ref))
+        results[tid] = {"value": r.get("result", "error"), "summary": (narrative.get(ref) or "")[:300]}
+        tests.append({"id": tid, "url": t.get("testid", ""), "title": t.get("title", ref), "reference": ref})
+    return results, tests, d.get("resultset"), None
+
+
+def load_previous(source):
+    """The previous report, from a file or URL; {} when there is none."""
+    if not source or source == "none":
+        return {}
+    try:
+        if source.startswith("http"):
+            resp = curl(source, accept="application/json")
+            return json.loads(resp[4]) if resp and resp[0] == 200 else {}
+        return json.loads(Path(source).read_text())
+    except Exception:  # noqa: BLE001 - no previous report means a full assessment
+        return {}
+
+
 def markdown(report):
     sym = {"pass": "✅", "fail": "❌", "indeterminate": "➖", "error": "⚠️"}
     lines = [f"# FAIR assessment of {report['start']}", "",
-             f"{report['generated']} · {len(report['tests'])} OSTrails tests · depth: {report['depth']}", ""]
+             f"{report['generated']} · {len(report['tests'])} OSTrails tests · depth: {report['depth']} · "
+             f"{report.get('assessedNow', 0)} resources assessed in this run, {report.get('reused', 0)} unchanged and reused", ""]
     tested = [n for n in report["nodes"] if n["results"]]
-    lines += ["| Level | Resource | Pass | Fail | Indet. | Error |", "|---|---|---|---|---|---|"]
+    lines += ["| Level | Resource | Pass | Fail | Indet. | Error | Assessed |", "|---|---|---|---|---|---|---|"]
     for n in tested:
         c = Counter(r["value"] for r in n["results"].values())
-        lines.append(f"| {n['level'] or '?'} | [{(n['title'] or n['iri'])[:70]}]({n['guid']}) | {c['pass']} | {c['fail']} | {c['indeterminate']} | {c['error']} |")
+        when = (n.get("assessedAt") or "")[:10] + (" (unchanged)" if n.get("reused") else "")
+        lines.append(f"| {n['level'] or '?'} | [{(n['title'] or n['iri'])[:70]}]({n['guid']}) | {c['pass']} | {c['fail']} | {c['indeterminate']} | {c['error']} | {when} |")
     skipped = [n for n in report["nodes"] if not n["results"]]
     if skipped:
         by = Counter(n["level"] or "?" for n in skipped)
@@ -231,7 +290,7 @@ def markdown(report):
     lines += ["", "## Per test", "", "| Test | " + " | ".join((n["level"] or "?")[:4] + str(i + 1) for i, n in enumerate(tested)) + " |",
               "|---|" + "---|" * len(tested)]
     for t in report["tests"]:
-        lines.append(f"| [{t['id'].replace('test_FM_', '')}]({t['url']}) | " + " | ".join(sym.get(n["results"].get(t["id"], {}).get("value"), "") for n in tested) + " |")
+        lines.append(f"| [{t.get('reference') or t['id'].replace('test_FM_', '')}]({t['url']}) | " + " | ".join(sym.get(n["results"].get(t["id"], {}).get("value"), "") for n in tested) + " |")
     return "\n".join(lines) + "\n"
 
 
@@ -240,32 +299,81 @@ def main():
     ap.add_argument("--start", default=SITE_URL, help="FDP root, or a web page linking it with rel=describedby (default: siteUrl)")
     ap.add_argument("--rewrite", action="append", default=[], help="FROM=TO prefix rewrite used to fetch and test IRIs")
     ap.add_argument("--depth", choices=list(DEPTH), default="catalog")
+    ap.add_argument("--algorithm", default=ALGORITHM, help="FAIR Champion algorithm URL (all metrics in one call)")
+    ap.add_argument("--per-test", action="store_true", help="call the tests in --tests one by one instead of the algorithm")
     ap.add_argument("--tests", default=str(ROOT / "fair" / "tests.txt"))
+    ap.add_argument("--previous", default=None, help="previous report.json (file or URL; default: <siteUrl>fair-report.json, 'none' to skip)")
+    ap.add_argument("--max-age-days", type=int, default=30, help="re-test unchanged resources whose results are older than this")
+    ap.add_argument("--full", action="store_true", help="re-test every resource, changed or not")
     ap.add_argument("--workers", type=int, default=3)
     ap.add_argument("--max-nodes", type=int, default=300)
     ap.add_argument("--out", default="fair-report")
     args = ap.parse_args()
 
     rewrite = [tuple(r.split("=", 1)) for r in args.rewrite] or [(BASE_IRI, SITE_URL.rstrip("/") + "/fdp/")]
-    tests = [l.strip() for l in Path(args.tests).read_text().splitlines() if l.strip() and not l.startswith("#")]
     walker = Walker(rewrite, DEPTH[args.depth], args.max_nodes)
     nodes = list(walker.walk(args.start).values())
     print(f"walked {len(nodes)} nodes: " + ", ".join(f"{v} {k}" for k, v in Counter(n['level'] or '?' for n in nodes).items()), file=sys.stderr)
 
-    jobs = [(n, t) for n in nodes if n["guid"] for t in tests]
-    print(f"running {len(jobs)} tests on {sum(1 for n in nodes if n['guid'])} resources …", file=sys.stderr)
-    with ThreadPoolExecutor(args.workers) as ex:
-        for (n, t), r in zip(jobs, ex.map(lambda j: run_test(j[1], j[0]["guid"]), jobs)):
-            n["results"][t] = r
+    now = datetime.datetime.now(datetime.timezone.utc)
+    previous = {} if args.full else load_previous(args.previous or (SITE_URL + "fair-report.json" if args.start == SITE_URL else "none"))
+    prev_nodes = {n.get("guid"): n for n in previous.get("nodes", []) if n.get("guid")}
+    tests = previous.get("tests", []) if previous.get("mode", "algorithm" if not args.per_test else "tests") == ("tests" if args.per_test else "algorithm") else []
+
+    def reusable(n):
+        p = prev_nodes.get(n["guid"])
+        if not p or not p.get("results") or not n.get("fingerprint") or p.get("fingerprint") != n["fingerprint"]:
+            return None
+        if any(r.get("summary", "").startswith(("test service error", "assessment service error")) for r in p["results"].values()):
+            return None
+        try:
+            age = now - datetime.datetime.fromisoformat(p.get("assessedAt") or previous["generated"])
+        except (KeyError, ValueError):
+            return None
+        return p if age.days < args.max_age_days else None
+
+    todo = []
+    for n in nodes:
+        if not n["guid"]:
+            continue
+        p = reusable(n)
+        if p:
+            n.update(results=p["results"], assessedAt=p.get("assessedAt") or previous["generated"], reused=True)
+        else:
+            todo.append(n)
+    print(f"assessing {len(todo)} resources; {sum(1 for n in nodes if n.get('reused'))} unchanged and reused …", file=sys.stderr)
+
+    out = Path(args.out)
+    (out / "ftr").mkdir(parents=True, exist_ok=True)
+    stamp = now.isoformat(timespec="seconds")
+    if args.per_test:
+        names = [l.strip() for l in Path(args.tests).read_text().splitlines() if l.strip() and not l.startswith("#")]
+        tests = [{"id": t, "url": f"https://tests.ostrails.eu/tests/{t}"} for t in names]
+        jobs = [(n, t) for n in todo for t in names]
+        with ThreadPoolExecutor(args.workers) as ex:
+            for (n, t), r in zip(jobs, ex.map(lambda j: run_test(j[1], j[0]["guid"]), jobs)):
+                n["results"][t] = r
+        for n in todo:
+            n["assessedAt"] = stamp
+    else:
+        with ThreadPoolExecutor(args.workers) as ex:
+            for n, (results, described, ftr, err) in zip(todo, ex.map(lambda n: run_algorithm(args.algorithm, n["guid"]), todo)):
+                n["assessedAt"] = stamp
+                n["results"] = results or {"algorithm": {"value": "error", "summary": err or "no results"}}
+                if described and len(described) >= len(tests):
+                    tests = described
+                if ftr:
+                    (out / "ftr" / (hashlib.sha1(n["guid"].encode()).hexdigest()[:16] + ".jsonld")).write_text(ftr)
+                    n["ftr"] = f"ftr/{hashlib.sha1(n['guid'].encode()).hexdigest()[:16]}.jsonld"
     for n in nodes:
         c = Counter(r["value"] for r in n["results"].values())
         n["score"] = {"pass": c["pass"], "fail": c["fail"], "indeterminate": c["indeterminate"], "error": c["error"], "total": len(n["results"])}
 
-    report = {"generated": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "start": args.start,
-              "depth": args.depth, "service": TEST_API,
-              "tests": [{"id": t, "url": f"https://tests.ostrails.eu/tests/{t}"} for t in tests], "nodes": nodes}
-    out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=True)
+    report = {"generated": stamp, "start": args.start, "depth": args.depth,
+              "mode": "tests" if args.per_test else "algorithm",
+              "service": TEST_API if args.per_test else args.algorithm,
+              "assessedNow": len(todo), "reused": sum(1 for n in nodes if n.get("reused")),
+              "tests": tests, "nodes": nodes}
     (out / "report.json").write_text(json.dumps(report, indent=1, ensure_ascii=False) + "\n")
     (out / "summary.md").write_text(markdown(report))
     print((out / "summary.md").read_text())

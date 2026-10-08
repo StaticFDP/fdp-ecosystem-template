@@ -603,12 +603,13 @@ function showFair() {
   const byLevel = {};
   skipped.forEach(n => { byLevel[n.level || 'other'] = (byLevel[n.level || 'other'] || 0) + 1; });
   const totals = tested.reduce((t, n) => { ['pass', 'fail', 'indeterminate', 'error'].forEach(k => t[k] += n.score[k]); return t; }, { pass: 0, fail: 0, indeterminate: 0, error: 0 });
-  const short = id => id.replace(/^test_FM_/, '').replace(/_M_/, ' ');
+  const short = t => t.reference || t.id.replace(/^test_FM_/, '').replace(/_M_/, ' ');
   let html = crumbs([{ label: 'FAIR tests' }]) + `<div class="page-head"><div class="eyebrow">FAIR assessment</div>
     <h1>How FAIR is this FDP?</h1>
     <p>Every level of the FAIR Data Point was walked (FDP → catalogs → datasets → distributions) and each resource that resolves was
       assessed with ${r.tests.length} <a href="https://tests.ostrails.eu/" target="_blank" rel="noopener">OSTrails FAIR Champion</a> tests.
-      Assessed ${esc(r.generated.slice(0, 10))}, depth: ${esc(r.depth)}.</p>
+      Assessed ${esc(r.generated.slice(0, 10))}, depth: ${esc(r.depth)}${r.mode === 'algorithm' ? ', with the <a href="' + esc(r.service) + '" target="_blank" rel="noopener">FAIR Champion algorithm</a> (all current metrics in one call)' : ''}.
+      ${r.reused != null ? `Only resources whose metadata changed are re-assessed: ${r.assessedNow} assessed in this run, ${r.reused} unchanged.` : ''}</p>
     <div class="meta"><span>${tested.length} resources tested</span><span>✓ ${totals.pass} pass</span><span>✗ ${totals.fail} fail</span>
       <span>– ${totals.indeterminate} indeterminate</span>${totals.error ? `<span>! ${totals.error} test errors</span>` : ''}</div>
     ${skipped.length ? `<p style="margin-top:10px">Not tested because their IRIs do not resolve: ${Object.entries(byLevel).map(([k, v]) => `${v} ${esc(k)}${v !== 1 ? 's' : ''}`).join(', ')}.
@@ -617,8 +618,8 @@ function showFair() {
   </div>
   <section><div class="section-head"><h2>Per test</h2><span class="count">✓ pass · ✗ fail · – indeterminate</span></div>
   <div class="fair-scroll"><table class="fair-grid"><thead><tr><th>Test</th>${tested.map((n, i) =>
-      `<th title="${esc(n.title || n.iri)}"><a href="${fairKey(n) && fairKey(n) !== 'index' ? hrefFor(fairKey(n)) : '#'}">${esc(fairLabel(n, i))}</a></th>`).join('')}</tr></thead><tbody>` +
-    r.tests.map(t => `<tr><th><a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(short(t.id))}</a></th>` + tested.map(n => {
+      `<th title="${esc((n.title || n.iri) + (n.assessedAt ? ' · assessed ' + n.assessedAt.slice(0, 10) + (n.reused ? ' (unchanged since)' : '') : ''))}"><a href="${fairKey(n) && fairKey(n) !== 'index' ? hrefFor(fairKey(n)) : '#'}">${esc(fairLabel(n, i))}</a></th>`).join('')}</tr></thead><tbody>` +
+    r.tests.map(t => `<tr><th><a href="${esc(t.url)}" target="_blank" rel="noopener" title="${esc(t.title || t.id)}">${esc(short(t))}</a></th>` + tested.map(n => {
       const res = n.results[t.id] || {};
       return `<td class="fair-${esc(res.value || 'none')}" title="${esc(res.summary || res.value || '')}">${FAIR_SYMBOL[res.value] || ''}</td>`;
     }).join('') + '</tr>').join('') + `</tbody></table></div></section>`;
