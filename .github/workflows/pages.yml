@@ -40,7 +40,7 @@ jobs:
             git commit -m "Initialise this FDP from the template"
             git push origin HEAD
           fi
-      - run: pip install rdflib && python scripts/validate.py
+      - run: pip install rdflib pyshex && python scripts/validate.py
       - name: Collect contributors (GitHub history, pull requests, data-source issues, Wikidata)
         env:
           GH_TOKEN: ${{ github.token }}
