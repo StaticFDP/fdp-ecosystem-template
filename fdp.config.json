@@ -20,6 +20,11 @@
     "github": "andrawaag",
     "orcid": "0000-0001-9773-4008"
   },
+  "orcidForm": {
+    "$comment": "Optional: the ORCID sign-in form in worker/ (see worker/README.md). url = the deployed worker; account = the GitHub account whose token the worker uses, so contributors.py credits the ORCID iD instead.",
+    "url": "",
+    "account": ""
+  },
   "theme": {
     "logo": "assets/logo.svg",
     "headingFont": "Source Serif 4",

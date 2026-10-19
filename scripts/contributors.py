@@ -9,7 +9,9 @@ Sources, all from the repository itself:
   preferred name, Wikidata item and ORCID;
 * "Add a data source" issues: the person who filled in the form is credited for the
   catalog, even though the github-actions bot makes the commit (the commit message
-  says "Generated from issue #N").
+  says "Generated from issue #N"). Issues from the ORCID form (worker/) carry a
+  "### Submitted by" section; when the issue was opened by the form's account
+  (orcidForm.account in fdp.config.json), that ORCID iD is credited instead.
 
 Per catalog folder it records who added it (first commit touching fdp/<folder>/)
 and everyone who changed it since. Bots and AI co-author trailers are left out.
@@ -34,7 +36,7 @@ import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fdpconfig import BASE_IRI, INDEX_FOLDER, REPOSITORY, ROOT  # noqa: E402
+from fdpconfig import BASE_IRI, INDEX_FOLDER, REPOSITORY, ROOT, get as config  # noqa: E402
 
 USER_AGENT = f"fdp-ecosystem/1.0 (https://github.com/{REPOSITORY})"
 API = "https://api.github.com"
@@ -129,6 +131,10 @@ SELECT ?item ?gh ?label ?orcid WHERE {{
     return {}
 
 
+ORCID_SUBMITTER = re.compile(r"^###\s+Submitted by\s*\n+ORCID:\s*\[(\d{4}-\d{4}-\d{4}-\d{3}[\dX])\]\([^)]*\)(?:\s+—\s+([^\n]+))?", re.M)
+ORCID_ICON = "https://orcid.org/assets/vectors/orcid.logo.icon.svg"
+
+
 def is_bot(login, kind=None):
     return not login or kind == "Bot" or login.endswith("[bot]")
 
@@ -167,15 +173,17 @@ def turtle(data):
         b = [pid(p["login"]), "    a foaf:Person, prov:Agent ;"]
         if p["name"]:
             b.append(f"    foaf:name {lit(p['name'])} ;")
-        b.append(f"    foaf:nick {lit(p['login'])} ;")
-        b.append(f"    foaf:account <https://github.com/{p['login']}> ;")
+        if p.get("github", True):
+            b.append(f"    foaf:nick {lit(p['login'])} ;")
+            b.append(f"    foaf:account <https://github.com/{p['login']}> ;")
         if p["wikidata"]:
             b.append(f"    owl:sameAs <{p['wikidata']}> ;")
         if p["orcid"]:
             b.append(f"    owl:sameAs <https://orcid.org/{p['orcid']}> ;")
         b.append(f"    foaf:depiction <{p['avatar']}> .")
         out.append("\n".join(b) + "\n")
-        out.append(f"<https://github.com/{p['login']}> a foaf:OnlineAccount ; foaf:accountServiceHomepage <https://github.com> ; foaf:accountName {lit(p['login'])} .\n")
+        if p.get("github", True):
+            out.append(f"<https://github.com/{p['login']}> a foaf:OnlineAccount ; foaf:accountServiceHomepage <https://github.com> ; foaf:accountName {lit(p['login'])} .\n")
     return "\n".join(out)
 
 
@@ -192,7 +200,7 @@ def main():
 
     def person(login, avatar=None, url=None):
         p = people.setdefault(login, {"login": login, "name": None, "wikidata": None, "orcid": None, "avatar": avatar, "url": url or f"https://github.com/{login}",
-                                      "commits": 0, "pullRequests": [], "requests": [], "catalogs": [], "since": None})
+                                      "github": True, "commits": 0, "pullRequests": [], "requests": [], "catalogs": [], "since": None})
         p["avatar"] = p["avatar"] or avatar
         return p
 
@@ -204,10 +212,17 @@ def main():
     issue_author = {}
     for i in api(f"/repos/{repo}/issues?state=all&labels=data-source&per_page=100"):
         login = (i.get("user") or {}).get("login")
-        if is_bot(login, (i.get("user") or {}).get("type")):
+        form_account = (config("orcidForm.account") or "").lower()
+        m = form_account and login and login.lower() == form_account and ORCID_SUBMITTER.search(i.get("body") or "")
+        if m:   # opened by the ORCID form's account: credit the signed-in person, keyed by ORCID iD
+            login = "orcid-" + m.group(1)
+            p = person(login, ORCID_ICON, f"https://orcid.org/{m.group(1)}")
+            p.update(github=False, orcid=m.group(1), name=p["name"] or (m.group(2) or "").strip() or None)
+        elif is_bot(login, (i.get("user") or {}).get("type")):
             continue
+        else:
+            p = person(login, i["user"].get("avatar_url"), i["user"].get("html_url"))
         issue_author[i["number"]] = login
-        p = person(login, i["user"].get("avatar_url"), i["user"].get("html_url"))
         p["requests"].append({"number": i["number"], "title": i["title"], "url": i["html_url"]})
         seen(p, i["created_at"][:10])
 
@@ -259,8 +274,10 @@ def main():
         p["pullRequests"].append({"number": pr["number"], "title": pr["title"], "url": pr["html_url"], "merged": pr["merged_at"][:10]})
         seen(p, pr["created_at"][:10])
 
-    wikidata = wikidata_people(list(people))
+    wikidata = wikidata_people([l for l, p in people.items() if p["github"]])
     for p in people.values():
+        if not p["github"]:   # ORCID-form submitter: name and iD come from the issue
+            continue
         wd = wikidata.get(p["login"].lower(), {})
         p["wikidata"], p["orcid"] = wd.get("wikidata"), wd.get("orcid")
         if wd.get("name"):
