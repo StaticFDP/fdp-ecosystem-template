@@ -1,0 +1,84 @@
+# ShEx shapes for an FDP ecosystem: index → catalog → dataset → distribution (→ data service).
+#
+# Ported from StaticFDP/static-fdp (profiles/*.shex, 2023, Eric Prud'hommeaux) and adapted to the
+# conventions of this template: dcterms:type from the access-method vocabulary on every distribution,
+# dcat:version instead of dcterms:hasVersion, and an index that points at catalog documents with
+# rdfs:seeAlso. Shapes are open: extra properties are allowed.
+#
+# scripts/validate.py checks every node of each class against the matching shape.
+# ShEx: https://shex.io/   FDP: https://specs.fairdatapoint.org/
+
+PREFIX dcat:    <http://www.w3.org/ns/dcat#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX fdp:     <https://w3id.org/fdp/fdp-o#>
+PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
+PREFIX prov:    <http://www.w3.org/ns/prov#>
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ldp:     <http://www.w3.org/ns/ldp#>
+PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
+PREFIX shapes:  <https://github.com/StaticFDP/fdp-ecosystem-template/blob/main/scripts/shapes/fdp-ecosystem.shex#>
+
+# ── FDP root (the index, or the root of each sub-FDP) ───────────────────────
+shapes:MetadataService EXTRA a {
+  a                    [fdp:MetadataService] ;
+  dcterms:title        LITERAL                    {1,} ;
+  dcterms:description  LITERAL                    *    ;
+  dcterms:publisher    @shapes:Agent              {1}  ;
+  dcterms:license      IRI                        ?    ;
+  dcterms:modified     LITERAL                    ?    ;
+  dcat:landingPage     IRI                        *    ;
+  ldp:contains         IRI                        *    ;
+  fdp:hasCatalog       @shapes:Catalog            {1,}
+}
+
+# ── Catalog: one per resource. On the index it is a pointer (rdfs:seeAlso); in its own document it lists datasets.
+shapes:Catalog EXTRA a {
+  a                    [dcat:Catalog] ;
+  dcterms:title        LITERAL                    {1,} ;
+  dcterms:description  LITERAL                    *    ;
+  dcterms:publisher    @shapes:Agent              ?    ;
+  dcterms:license      IRI                        ?    ;
+  dcterms:accessRights IRI                        ?    ;
+  dcat:landingPage     IRI                        *    ;
+  rdfs:seeAlso         IRI                        *    ;
+  dcat:dataset         @shapes:Dataset            *
+}
+
+# ── Dataset: one per release, snapshot or live state ───────────────────────
+shapes:Dataset EXTRA a {
+  a                    [dcat:Dataset] ;
+  dcterms:title        LITERAL                    {1,} ;
+  dcterms:description  LITERAL                    *    ;
+  dcat:version         LITERAL                    ?    ;
+  dcterms:issued       LITERAL                    ?    ;
+  dcterms:modified     LITERAL                    ?    ;
+  dcterms:publisher    @shapes:Agent              ?    ;
+  dcterms:license      IRI                        ?    ;
+  dcat:distribution    @shapes:Distribution       {1,}
+}
+
+# ── Distribution: one per way to get it ────────────────────────────────────
+shapes:Distribution EXTRA a {
+  a                    [dcat:Distribution] ;
+  dcterms:title        LITERAL                    {1,} ;
+  dcterms:description  LITERAL                    *    ;   # house style: starts with "How to get it:"
+  dcterms:type         IRI                        {1}  ;   # access method, from fdp/vocab/access-methods.ttl
+  dcat:accessURL       IRI                        {1}  ;
+  dcat:downloadURL     IRI                        *    ;
+  dcat:mediaType       IRI OR LITERAL             ?    ;
+  dcterms:format       IRI OR LITERAL             ?    ;   # house style: an EU file-type IRI
+  dcat:accessService   @shapes:DataService        *    ;
+  prov:wasDerivedFrom  IRI                        *
+}
+
+shapes:DataService EXTRA a {
+  a                       [dcat:DataService] ;
+  dcterms:title           LITERAL                 *    ;
+  dcat:endpointURL        IRI                     {1,} ;
+  dcat:endpointDescription IRI                    *    ;
+  dcterms:conformsTo      IRI                     *
+}
+
+shapes:Agent {
+  foaf:name            LITERAL                    {1,}
+}

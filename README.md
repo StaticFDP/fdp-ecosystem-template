@@ -36,7 +36,7 @@ Optional:
 | **Self-service** | An issue form becomes a validated pull request (`scripts/add_source.py`) |
 | **Credit** | Contributors from commits, pull requests and form submissions, with names, Wikidata items and ORCID iDs from Wikidata (P2037). Published in the site and as RDF (`dcterms:contributor`). |
 | **FAIR assessment** | Walks every level of the FDP and runs the [OSTrails FAIR Champion](https://tests.ostrails.eu/) tests: weekly, after deploys and on demand |
-| **Validation** | Every push checks that the Turtle parses, the DCAT shape, the vocabulary terms and the index consistency |
+| **Validation** | Every push checks that the Turtle parses, the DCAT shape, the vocabulary terms and the index consistency, and validates every node against the ShEx shapes in `scripts/shapes/` |
 
 ## Engine and content
 
@@ -54,7 +54,7 @@ Engine files read everything instance-specific from `fdp.config.json` (via `scri
 ## Local preview
 
 ```bash
-pip install rdflib
+pip install rdflib pyshex
 python3 scripts/validate.py
 scripts/build-site.sh && python3 -m http.server -d _site 8000
 ```
