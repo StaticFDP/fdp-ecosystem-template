@@ -1,0 +1,19 @@
+# Cloudflare Worker for the optional ORCID sign-in form. Setup: worker/README.md
+name               = "fdp-orcid-form"
+main               = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+GITHUB_REPO      = "OWNER/REPO"                       # where the issue is opened (fdp.config.json → repository)
+SITE_NAME        = "My FDP"                           # fdp.config.json → name
+SITE_URL         = "https://OWNER.github.io/REPO/"    # fdp.config.json → siteUrl
+# Optional mirror of each issue to Codeberg/Forgejo (also set the FORGEJO_TOKEN secret):
+FORGEJO_BASE_URL = "https://codeberg.org"
+FORGEJO_REPO     = ""
+
+# Secrets, never in this file:  npx wrangler secret put <NAME>
+#   GITHUB_TOKEN         fine-grained token: Issues read and write on GITHUB_REPO only
+#   ORCID_CLIENT_ID      from https://orcid.org/developer-tools
+#   ORCID_CLIENT_SECRET
+#   SESSION_SECRET       any random string of 32+ characters
+#   FORGEJO_TOKEN        optional, Issues read and write on FORGEJO_REPO
