@@ -26,6 +26,8 @@ There are three ways to add a resource to this FDP. All of them end in a pull re
 4. Wrong or missing values? Edit the issue. The workflow regenerates the branch. If it can't parse the form, it comments with the reason.
 5. A maintainer reviews and merges.
 
+No GitHub account? If this FDP runs the optional [ORCID sign-in form](worker/README.md), the site shows **Add with ORCID**. It asks the same questions and opens the same issue on your behalf, with your ORCID iD as the submitter, so you are credited for the source.
+
 ### 2. Link a live FAIR Data Point
 
 If the source publishes its own FDP (for example a germplasm bank running FAIR-in-a-box, or a Koetai node), don't copy its metadata: link it. The viewer crawls the FDP in the visitor's browser: FDP → catalogs → datasets and data services → distributions → access services. It is therefore always current.

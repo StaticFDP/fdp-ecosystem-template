@@ -33,7 +33,7 @@ Optional:
 |---|---|
 | **Website** | Index → catalog → dataset → "ways to get it", search, access-method filters, contributors, FAIR results; light and dark mode; static HTML and schema.org JSON-LD for search engines |
 | **Live FDPs** | An index entry can point at someone else's FAIR Data Point. The site crawls it in the browser. |
-| **Self-service** | An issue form becomes a validated pull request (`scripts/add_source.py`) |
+| **Self-service** | An issue form becomes a validated pull request (`scripts/add_source.py`). Optional: an [ORCID sign-in form](worker/README.md) for people without a GitHub account |
 | **Credit** | Contributors from commits, pull requests and form submissions, with names, Wikidata items and ORCID iDs from Wikidata (P2037). Published in the site and as RDF (`dcterms:contributor`). |
 | **FAIR assessment** | Walks every level of the FDP and runs the [OSTrails FAIR Champion](https://tests.ostrails.eu/) tests: weekly, after deploys and on demand |
 | **Validation** | Every push checks that the Turtle parses, the DCAT shape, the vocabulary terms and the index consistency |

@@ -222,7 +222,7 @@ async function loadJson(name) {
 }
 const loadContributors = () => loadJson('contributors.json');
 const personByLogin = login => (contributors && contributors.people.find(p => p.login === login)) || { login, name: null, avatar: `https://github.com/${login}.png`, url: `https://github.com/${login}` };
-const displayName = p => p.name || '@' + p.login;
+const displayName = p => p.name || (p.github === false ? 'ORCID ' + p.orcid : '@' + p.login);
 const avatar = (p, size = 28) => `<img class="avatar" src="${esc(p.avatar)}${p.avatar.includes('?') ? '&' : '?'}s=${size * 2}" width="${size}" height="${size}" alt="">`;
 function personSummary(p) {
   const bits = [];
@@ -393,7 +393,8 @@ function renderChrome() {
     (contributors ? '<a href="#/contributors">Contributors</a>' : '') +
     (fairReport ? '<a href="#/fair">FAIR tests</a>' : '') +
     (repo ? link(`https://github.com/${repo.org}/${repo.name}#readme`, 'About') +
-            link(`https://github.com/${repo.org}/${repo.name}/issues/new?template=add-data-source.yml`, 'Add a data source') : '');
+            link(`https://github.com/${repo.org}/${repo.name}/issues/new?template=add-data-source.yml`, 'Add a data source') : '') +
+    (CFG.orcidForm ? link(CFG.orcidForm, 'Add with ORCID') : '');
   $('topright').innerHTML = (repo ? `<a class="btn ghost" href="https://github.com/${esc(repo.org)}/${esc(repo.name)}" target="_blank" rel="noopener">GitHub</a>` : '') +
     `<a class="btn" href="${esc(indexModel.file)}" target="_blank" rel="noopener">Turtle</a>`;
   $('footer').innerHTML = `<div><div class="lockup">${LOGO}<span>${esc(name)}</span></div>
@@ -639,6 +640,7 @@ function showContributors() {
       Wikidata when the GitHub account is linked there with property
       <a href="https://www.wikidata.org/wiki/Property:P2037" target="_blank" rel="noopener">P2037 (GitHub username)</a>.</p>
     ${repo ? `<div class="actions"><a class="btn" href="https://github.com/${esc(repo.org)}/${esc(repo.name)}/issues/new?template=add-data-source.yml" target="_blank" rel="noopener">Add a data source</a>
+      ${CFG.orcidForm && safeUrl(CFG.orcidForm) ? `<a class="btn ghost" href="${esc(CFG.orcidForm)}" target="_blank" rel="noopener">Add with ORCID (no GitHub account)</a>` : ''}
       <a class="btn ghost" href="https://github.com/${esc(repo.org)}/${esc(repo.name)}/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">How to contribute</a></div>` : ''}
   </div><section><div class="rows">`;
   for (const p of contributors.people) {
@@ -648,8 +650,8 @@ function showContributors() {
     html += `<div class="row">
       <div class="row-side">${avatar(p, 56)}</div>
       <div><div class="row-title"><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(displayName(p))}</a>
-        ${p.name ? `<span class="fmt mono"> @${esc(p.login)}</span>` : ''}</div>
-        <div class="row-meta">${[link(p.url, 'GitHub ↗'), p.wikidata ? link(p.wikidata, 'Wikidata ' + localName(p.wikidata) + ' ↗') : '',
+        ${p.name && p.github !== false ? `<span class="fmt mono"> @${esc(p.login)}</span>` : ''}</div>
+        <div class="row-meta">${[p.github !== false ? link(p.url, 'GitHub ↗') : '', p.wikidata ? link(p.wikidata, 'Wikidata ' + localName(p.wikidata) + ' ↗') : '',
           p.orcid ? link('https://orcid.org/' + p.orcid, 'ORCID ' + p.orcid + ' ↗') : ''].filter(Boolean).map(x => `<span>${x}</span>`).join('')}</div>
         <div class="row-desc">${esc(personSummary(p))}${p.since ? ` · since ${esc(p.since)}` : ''}</div>
         ${cats.length ? `<div class="row-meta"><span>Catalogs: ${cats.join(', ')}</span></div>` : ''}
