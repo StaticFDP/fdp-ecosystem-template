@@ -69,6 +69,30 @@ for t in {str(x) for triple in merged for x in triple[1:]}:
             except AttributeError:
                 errors.append(f"{t} is not defined in {base}")
 
+# ShEx: every FDP root, catalog, dataset, distribution and data service must match its shape in
+# scripts/shapes/fdp-ecosystem.shex (ported from StaticFDP/static-fdp). Needs PyShEx (pip install pyshex).
+SHAPES = Namespace("https://github.com/StaticFDP/fdp-ecosystem-template/blob/main/scripts/shapes/fdp-ecosystem.shex#")
+try:
+    from pyshex import ShExEvaluator
+except ImportError:
+    ShExEvaluator = None
+    print("\nShEx skipped: install PyShEx (pip install pyshex) to check the shapes")
+if ShExEvaluator:
+    schema = (Path(__file__).resolve().parent / "shapes" / "fdp-ecosystem.shex").read_text()
+    targets = [(FDP.MetadataService, "MetadataService"), (DCAT.Catalog, "Catalog"), (DCAT.Dataset, "Dataset"),
+               (DCAT.Distribution, "Distribution"), (DCAT.DataService, "DataService")]
+    checked = 0
+    for cls, shape in targets:
+        focus = sorted(str(s) for s in set(merged.subjects(RDF.type, cls)))
+        if not focus:
+            continue
+        for r in ShExEvaluator(rdf=merged, schema=schema, focus=focus, start=str(SHAPES[shape])).evaluate():
+            checked += 1
+            if not r.result:
+                reason = " ".join((r.reason or "").split())
+                errors.append(f"{r.focus}: does not match ShEx shape {shape}: {reason[:300]}")
+    print(f"\nShEx: checked {checked} nodes against scripts/shapes/fdp-ecosystem.shex")
+
 n = lambda t: len(set(merged.subjects(RDF.type, t)))
 print(f"\n{n(DCAT.Catalog)} catalogs, {n(DCAT.Dataset)} datasets, {n(DCAT.Distribution)} distributions, {n(DCAT.DataService)} services")
 print("\n".join(errors) or "no problems found")

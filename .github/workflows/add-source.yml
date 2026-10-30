@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install rdflib
+      - run: pip install rdflib pyshex
 
       - name: Generate catalog from the issue
         id: gen

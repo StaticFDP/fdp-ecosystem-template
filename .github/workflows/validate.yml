@@ -2,9 +2,9 @@ name: Validate FDP Turtle
 
 on:
   push:
-    paths: ["fdp/**", "scripts/validate.py"]
+    paths: ["fdp/**", "scripts/validate.py", "scripts/shapes/**"]
   pull_request:
-    paths: ["fdp/**", "scripts/validate.py"]
+    paths: ["fdp/**", "scripts/validate.py", "scripts/shapes/**"]
 
 jobs:
   validate:
@@ -14,5 +14,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install rdflib
+      - run: pip install rdflib pyshex
       - run: python scripts/validate.py
