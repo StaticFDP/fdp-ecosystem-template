@@ -1,5 +1,5 @@
 'use strict';
-// Static FDP browser: fetches the index Turtle, follows rdfs:seeAlso to every
+// Lean FDP browser: fetches the index Turtle, follows rdfs:seeAlso to every
 // sub-catalog, parses everything client-side with N3.js and renders
 // index → catalog → dataset → distributions. No server, no build step.
 //

@@ -2,6 +2,8 @@
 
 Start your own static [FAIR Data Point](https://specs.fairdatapoint.org/) ecosystem: Turtle metadata in a GitHub repository, served by GitHub Pages, with a browsable website, self-service contributions and automatic FAIR assessment. No server needed.
 
+Part of [Lean FDP](https://github.com/LeanFDP) (formerly StaticFDP): FAIR Data Points that run on a forge, without servers or containers.
+
 Each catalog describes one resource and **every way to obtain it**: portal, APIs, SPARQL endpoints, bulk dumps, cloud buckets, copies in aggregators. Each way is typed with an access method and comes with a "How to get it" recipe.
 
 **Start here:** <https://fdp.semscape.org/ecosystems/> (the landing page, with all ecosystems and a one-click start).

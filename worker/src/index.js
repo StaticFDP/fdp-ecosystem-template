@@ -8,7 +8,7 @@
  * who submitted it ("### Submitted by" with the ORCID iD); scripts/contributors.py credits that
  * person instead of the account that owns the token.
  *
- * Ported from StaticFDP/staticfdp (worker/src/index.js, April 2026): ORCID OAuth, signed
+ * Ported from LeanFDP/staticfdp (worker/src/index.js, April 2026): ORCID OAuth, signed
  * session cookie, honeypot, and the optional dual-write to Codeberg/Forgejo.
  *
  * Routes:
