@@ -70,8 +70,8 @@ for t in {str(x) for triple in merged for x in triple[1:]}:
                 errors.append(f"{t} is not defined in {base}")
 
 # ShEx: every FDP root, catalog, dataset, distribution and data service must match its shape in
-# scripts/shapes/fdp-ecosystem.shex (ported from StaticFDP/static-fdp). Needs PyShEx (pip install pyshex).
-SHAPES = Namespace("https://github.com/StaticFDP/fdp-ecosystem-template/blob/main/scripts/shapes/fdp-ecosystem.shex#")
+# scripts/shapes/fdp-ecosystem.shex (ported from LeanFDP/static-fdp). Needs PyShEx (pip install pyshex).
+SHAPES = Namespace("https://github.com/LeanFDP/fdp-ecosystem-template/blob/main/scripts/shapes/fdp-ecosystem.shex#")
 try:
     from pyshex import ShExEvaluator
 except ImportError:

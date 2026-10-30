@@ -4,7 +4,7 @@ People without a GitHub account can add a data source by signing in with ORCID. 
 
 The issue records who submitted it (`### Submitted by`, with the ORCID iD and name). `scripts/contributors.py` credits that person, not the account that owns the token, when `orcidForm.account` in `fdp.config.json` is set.
 
-Ported from [StaticFDP/staticfdp](https://github.com/StaticFDP/staticfdp) (ORCID OAuth, signed session cookie, honeypot, optional Codeberg mirror). The form only asks ORCID for `/authenticate`: the iD and the name.
+Ported from [LeanFDP/staticfdp](https://github.com/LeanFDP/staticfdp) (ORCID OAuth, signed session cookie, honeypot, optional Codeberg mirror). The form only asks ORCID for `/authenticate`: the iD and the name.
 
 ## Set it up
 

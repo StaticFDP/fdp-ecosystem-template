@@ -1,6 +1,6 @@
 # ShEx shapes for an FDP ecosystem: index → catalog → dataset → distribution (→ data service).
 #
-# Ported from StaticFDP/static-fdp (profiles/*.shex, 2023, Eric Prud'hommeaux) and adapted to the
+# Ported from LeanFDP/static-fdp (profiles/*.shex, 2023, Eric Prud'hommeaux) and adapted to the
 # conventions of this template: dcterms:type from the access-method vocabulary on every distribution,
 # dcat:version instead of dcterms:hasVersion, and an index that points at catalog documents with
 # rdfs:seeAlso. Shapes are open: extra properties are allowed.
@@ -16,7 +16,7 @@ PREFIX prov:    <http://www.w3.org/ns/prov#>
 PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX ldp:     <http://www.w3.org/ns/ldp#>
 PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>
-PREFIX shapes:  <https://github.com/StaticFDP/fdp-ecosystem-template/blob/main/scripts/shapes/fdp-ecosystem.shex#>
+PREFIX shapes:  <https://github.com/LeanFDP/fdp-ecosystem-template/blob/main/scripts/shapes/fdp-ecosystem.shex#>
 
 # ── FDP root (the index, or the root of each sub-FDP) ───────────────────────
 shapes:MetadataService EXTRA a {

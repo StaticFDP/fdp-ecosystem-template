@@ -1,10 +1,10 @@
 {
   "$comment": "The one file that makes this FDP ecosystem yours. Engine code (scripts/, site/, workflows) reads everything instance-specific from here. In a copy made with 'Use this template', the first deploy fills in repository, siteUrl and baseIri.",
   "name": "FDP Ecosystem Template",
-  "repository": "StaticFDP/fdp-ecosystem-template",
+  "repository": "LeanFDP/fdp-ecosystem-template",
   "branch": "main",
   "siteUrl": "https://fdp.semscape.org/fdp-ecosystem-template/",
-  "baseIri": "https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/",
+  "baseIri": "https://raw.githubusercontent.com/LeanFDP/fdp-ecosystem-template/main/fdp/",
   "indexFolder": "index",
   "headline": "Every way to get the *data* you need",
   "description": "A static FAIR Data Point that describes every way to obtain each resource: portals, APIs, SPARQL endpoints, bulk dumps, cloud buckets and copies in aggregators.",
@@ -58,7 +58,7 @@
     "depth": "catalog"
   },
   "template": {
-    "repository": "StaticFDP/fdp-ecosystem-template",
+    "repository": "LeanFDP/fdp-ecosystem-template",
     "branch": "main",
     "landing": "https://fdp.semscape.org/ecosystems/"
   }

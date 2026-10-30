@@ -1,7 +1,7 @@
 @prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
-@prefix am:      <https://raw.githubusercontent.com/StaticFDP/fdp-ecosystem-template/main/fdp/vocab/access-methods#> .
+@prefix am:      <https://raw.githubusercontent.com/LeanFDP/fdp-ecosystem-template/main/fdp/vocab/access-methods#> .
 
 # Small controlled vocabulary used as dcterms:type on every dcat:Distribution,
 # so a client can ask "how can I get this?" without parsing free text.
